@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Travelbrag -- the travelogue of Andrea & Brett</title>
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,minimal-ui">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg"  xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="32" height="52">' +
+            '<mask id="pinhole">' +
+            '<rect width="100%" height="100%" fill="white" />' +
+            '<circle cx="16" cy="16" r="5" />' +
+            '</mask>' +
+            '<path d="M16 1C7.715 1 1 7.656 1 15.865 1 24.075 16 51 16 51s15-26.924 15-35.135C31 7.655 24.282 1 16 1z" ' +
+            'fill="{colour}" fill-opacity="0.5" mask="url(#pinhole)" stroke="#000000" />' +
+            '<circle cx="16" cy="16" r="5" fill="none" stroke-width="1" stroke="#000000" />' +
+            '</svg>';
+
+        var iconCache = {};
+
+        function createPin(colour) {
+            if (!iconCache[colour]) {
+                var divIcon = L.divIcon({
+                    iconSize: L.point(32, 52),
+                    iconAnchor: L.point(16, 51),
+                    popupAnchor: L.point(0, -35),
+                    className: "vector-marker",
+                    html: svg.replace("{colour}", colour)
+                });
+                iconCache[colour] = divIcon;
+            }
+            return iconCache[colour];
+        }
+
+        function createMarker(feature, latLng) {
+            var icon = createPin(feature.properties["marker-color"]);
+            var marker = L.marker(latLng, { icon: icon });
+            var popup = "<b>" + feature.properties["name"] + "</b>";
+            popup += "<br><i><small>Visited "
+                + feature.properties["visit count"]
+                + (feature.properties["visit count"] !== 1 ? " times" : " time")
+                + "; last visited in "
+                + feature.properties["last visit"]
+                + "</i></small>";
+            marker.bindPopup(popup);
+            return marker;
+        }
+
+        var map = L.map('map').setView([0.0, 0.0], 1);
+
+        L.tileLayer('https://a.tiles.mapbox.com/v4/mapbox.world-bright/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiYnJldHRjYW5ub24iLCJhIjoiY2p5ZG50dGZuMHNrODNuazQ5NHB1bHJoaSJ9.tzQsKRx_-iR7ZWc6AG08cw', {
+            maxZoom: 15,  // Technically 18, but that's more zoom than necessary.'
+            attribution: 'Map tiles by <a href="https://www.mapbox.com/">Mapbox</a> | Data from <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        fetch("travelogue.geojson").then(r => r.json())
+            .then(data => L.geoJSON(data, { pointToLayer: createMarker }).addTo(map))
+            .catch(e => console.log("Boo! Something went wrong when loading GeoJSON data"));
+    </script>
+</body>
+
+</html>

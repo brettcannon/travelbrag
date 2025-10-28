@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__
+.venv
+.vscode
+
+# Don't accidentally commit any personal data.
+site/travelogue.geojson
+*.sqlite3
+*.db
+
+# Local Netlify folder
+.netlify
