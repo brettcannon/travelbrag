@@ -3,4 +3,4 @@ run:
 
 # Deploy to production
 publish:
-    netlify deploy --prod --dir=site
+    npx netlify-cli -- deploy --prod --dir=site
